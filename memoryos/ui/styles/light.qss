@@ -1,0 +1,181 @@
+/* Sprint 7: light theme. Layered on top of the app's QPalette (see
+   memoryos/theme.py) -- QSS here adds shape, spacing, and hover-state
+   polish; any widget without an explicit rule below falls back to the
+   palette's colors. */
+
+QMainWindow, QWidget {
+    background-color: #F5F6F8;
+    color: #1A1A1A;
+    font-size: 13px;
+}
+
+/* QLabels never want their own opaque background box -- their color always
+   comes from whatever container they sit in (sectionPanel, resultCard,
+   emptyState, ...); without this every label nested in a styled panel paints
+   a mismatched rectangle instead of blending into the panel. */
+QLabel {
+    background-color: transparent;
+}
+
+QLabel#sectionTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1A1A;
+    padding-bottom: 2px;
+}
+
+QLabel#mutedLabel {
+    color: #6E6E6E;
+    font-size: 12px;
+}
+
+QWidget#sectionPanel {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+}
+
+QLineEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #D6D8DC;
+    border-radius: 6px;
+    padding: 6px 10px;
+    selection-background-color: #2A82DA;
+}
+
+QLineEdit:focus {
+    border: 1px solid #2A82DA;
+}
+
+QPushButton {
+    background-color: #FFFFFF;
+    border: 1px solid #D6D8DC;
+    border-radius: 6px;
+    padding: 6px 14px;
+}
+
+QPushButton:hover {
+    background-color: #EEF3FB;
+    border: 1px solid #2A82DA;
+}
+
+QPushButton:pressed {
+    background-color: #DCE9FA;
+}
+
+QPushButton:disabled {
+    color: #B0B0B0;
+    background-color: #F5F6F8;
+    border: 1px solid #E4E4E4;
+}
+
+QPushButton#primaryButton {
+    background-color: #2A82DA;
+    color: #FFFFFF;
+    border: 1px solid #2A82DA;
+    font-weight: 600;
+}
+
+QPushButton#primaryButton:hover {
+    background-color: #3D8FE0;
+}
+
+QPushButton#iconButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QPushButton#iconButton:hover {
+    background-color: #E4ECF9;
+}
+
+QPushButton#dangerIconButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QPushButton#dangerIconButton:hover {
+    background-color: #FBE3E1;
+}
+
+QWidget#resultCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EA;
+    border-radius: 8px;
+}
+
+QWidget#resultCard:hover {
+    border: 1px solid #2A82DA;
+}
+
+QWidget#emptyState {
+    background-color: transparent;
+}
+
+QProgressBar {
+    border: none;
+    border-radius: 5px;
+    background-color: #E5E7EA;
+    height: 10px;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: #2A82DA;
+    border-radius: 5px;
+}
+
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #C7CBD1;
+    border-radius: 5px;
+    min-height: 24px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #A9AEB6;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QMenuBar {
+    background-color: #F5F6F8;
+    border-bottom: 1px solid #E5E7EA;
+}
+
+QMenuBar::item:selected {
+    background-color: #E4ECF9;
+    border-radius: 4px;
+}
+
+QMenu {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 20px;
+    border-radius: 4px;
+}
+
+QMenu::item:selected {
+    background-color: #E4ECF9;
+}

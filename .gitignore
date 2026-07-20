@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+.venv/
+
+# Local user data (created at runtime, not source)
+.memoryos/
+.index/
+
+# Build / packaging artifacts (rebuilt from source, never committed)
+build/
+dist/
+packaging/model_cache/
+packaging/installer_output/
+
+# Editor / tool local state
+.claude/
