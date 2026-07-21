@@ -35,6 +35,15 @@ QWidget#sectionPanel {
     border-radius: 8px;
 }
 
+QLabel#toastBanner {
+    background-color: #E3F6E8;
+    color: #1E7B34;
+    border: 1px solid #B7E4C4;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
 QLineEdit {
     background-color: #FFFFFF;
     border: 1px solid #D6D8DC;

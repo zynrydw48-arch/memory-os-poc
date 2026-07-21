@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from memoryos.ranking.attribute_boost import compute_attribute_boost
 from memoryos.ranking.reasons import build_reasons, tokenize
 from memoryos.ranking.similarity import rank_by_similarity
 
@@ -75,3 +76,48 @@ def test_build_reasons_falls_back_to_semantic_similarity_note_when_no_overlap():
     record = _FakeRecord(file_type="pdf", metadata={"text_snippet": "unrelated content here"})
     reasons = build_reasons("xyz nonexistent query terms", record)
     assert reasons[0] == "Matched by overall semantic similarity (no exact keyword overlap)"
+
+
+# Bug fix regression: "white dog" ranking a brown dog above a white dog --
+# see memoryos/ranking/attribute_boost.py's module docstring for the root
+# cause (a flattened caption/tags/colors text embedding doesn't reliably
+# bind a color adjective to the correct object).
+def test_attribute_boost_rewards_exact_color_match():
+    tokens = tokenize("white dog")
+    white_dog_metadata = {"colors": ["white", "gray"], "caption": "a dog sitting outside", "tags": []}
+    brown_dog_metadata = {"colors": ["brown", "beige"], "caption": "a dog sitting outside", "tags": []}
+
+    assert compute_attribute_boost(tokens, white_dog_metadata) > compute_attribute_boost(
+        tokens, brown_dog_metadata
+    )
+
+
+def test_attribute_boost_can_flip_a_close_similarity_gap():
+    tokens = tokenize("white dog")
+    # Mirrors the reported bug: the brown dog has slightly higher raw
+    # similarity, but the white dog is the one whose stored colors actually
+    # match the query -- the boost should be enough to close a small gap.
+    brown_dog_raw_similarity = 0.52
+    white_dog_raw_similarity = 0.50
+    brown_dog_boost = compute_attribute_boost(tokens, {"colors": ["brown"], "caption": "", "tags": []})
+    white_dog_boost = compute_attribute_boost(tokens, {"colors": ["white"], "caption": "", "tags": []})
+
+    assert brown_dog_raw_similarity + brown_dog_boost < white_dog_raw_similarity + white_dog_boost
+
+
+def test_attribute_boost_is_zero_when_no_query_words_are_color_or_object_words():
+    tokens = tokenize("quarterly financial report")
+    boost = compute_attribute_boost(tokens, {"colors": ["white"], "caption": "a dog", "tags": []})
+    assert boost == 0.0
+
+
+def test_attribute_boost_rewards_object_word_in_caption_or_tags():
+    tokens = tokenize("golden retriever")
+    matching = compute_attribute_boost(
+        tokens, {"colors": [], "caption": "a golden retriever running", "tags": []}
+    )
+    non_matching = compute_attribute_boost(
+        tokens, {"colors": [], "caption": "a tabby cat sleeping", "tags": []}
+    )
+    assert matching > 0.0
+    assert non_matching == 0.0

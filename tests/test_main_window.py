@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QMessageB
 
 from memoryos import file_actions
 from memoryos.database.db import Database, FileRecord
+from memoryos.indexing import IndexStats
 from memoryos.theme import Theme
 from memoryos.ui.main_window import MainWindow
 
@@ -186,6 +187,54 @@ def test_empty_state_browse_button_wired_to_on_browse(empty_window, monkeypatch,
 
 def test_populated_window_shows_results_view_not_empty_state(window):
     assert window._results_stack.currentWidget() is window._results_view
+
+
+class _FakeWorker:
+    """Stands in for IndexingWorker in _teardown_worker tests -- only needs
+    a wait() the crash-fix regression test can assert was called."""
+
+    def __init__(self):
+        self.wait_called = False
+
+    def wait(self, *args, **kwargs):
+        self.wait_called = True
+
+
+def test_teardown_worker_waits_for_thread_before_dropping_reference(window):
+    # Bug-fix regression: dropping the last Python reference to a QThread
+    # without confirming its underlying OS thread has fully finished is the
+    # classic PySide "QThread: Destroyed while thread is still running"
+    # crash -- _teardown_worker must call wait() first.
+    fake_worker = _FakeWorker()
+    window._worker = fake_worker
+
+    window._teardown_worker()
+
+    assert fake_worker.wait_called
+    assert window._worker is None
+
+
+def test_worker_finished_shows_toast_and_resets_to_idle_main_screen(window):
+    window._progress_bar.setVisible(True)
+    window._status_label.setText("Indexing... 3/5")
+
+    window._on_worker_finished(IndexStats(indexed=5, unchanged_skipped=1, pruned=0, errors=[]))
+
+    # Note: isVisible() alone always reads False here since the test never
+    # calls window.show() -- isVisibleTo() checks the explicit show/hide
+    # state along the parent chain instead of actual on-screen visibility.
+    assert window._toast_label.isVisibleTo(window)
+    assert "5" in window._toast_label.text()
+    assert not window._progress_bar.isVisibleTo(window)
+    assert window._status_label.text() == "Ready."
+
+
+def test_worker_finished_toast_mentions_errors_when_present(window):
+    window._on_worker_finished(
+        IndexStats(indexed=3, unchanged_skipped=0, pruned=0, errors=[("bad.jpg", "boom")])
+    )
+
+    assert "1 error" in window._toast_label.text()
 
 
 def test_about_action_shows_version_and_attribution(window, monkeypatch):

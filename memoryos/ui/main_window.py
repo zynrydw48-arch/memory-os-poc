@@ -50,6 +50,7 @@ _THEME_MENU_LABELS = {
 
 RESOURCE_CHECK_INTERVAL_MS = 2000
 _PROGRESS_ANIMATION_MS = 150
+_TOAST_DURATION_MS = 4000
 
 _PAUSE_REASON_LABELS = {
     PauseReason.USER_REQUESTED: "Paused (by user)",
@@ -111,6 +112,12 @@ class MainWindow(QMainWindow):
         central = QWidget()
         layout = QVBoxLayout(central)
         layout.setSpacing(12)
+
+        self._toast_label = QLabel()
+        self._toast_label.setObjectName("toastBanner")
+        self._toast_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._toast_label.setVisible(False)
+        layout.addWidget(self._toast_label)
 
         index_panel = QWidget()
         index_panel.setObjectName("sectionPanel")
@@ -417,11 +424,12 @@ class MainWindow(QMainWindow):
 
     def _on_worker_finished(self, stats: IndexStats) -> None:
         self._teardown_worker()
-        self._status_label.setText(
-            f"Indexed {stats.indexed} | Unchanged {stats.unchanged_skipped} | "
-            f"Pruned {stats.pruned} | Errors {len(stats.errors)} | "
-            f"Took {stats.elapsed_seconds:.1f}s"
-        )
+        self._progress_bar.setVisible(False)
+        self._status_label.setText("Ready.")
+        message = f"Indexing complete — {stats.indexed} file(s) indexed."
+        if stats.errors:
+            message += f" {len(stats.errors)} error(s)."
+        self._show_toast(message)
         # Sprint 7: an indexing run may have taken the database from empty to
         # non-empty (or vice versa, after a prune) -- re-check which of
         # EmptyState/ResultsView should be showing.
@@ -429,13 +437,27 @@ class MainWindow(QMainWindow):
 
     def _on_worker_error(self, message: str) -> None:
         self._teardown_worker()
+        self._progress_bar.setVisible(False)
         self._status_label.setText(f"Indexing failed: {message}")
+
+    def _show_toast(self, message: str) -> None:
+        self._toast_label.setText(message)
+        self._toast_label.setVisible(True)
+        QTimer.singleShot(_TOAST_DURATION_MS, lambda: self._toast_label.setVisible(False))
 
     def _teardown_worker(self) -> None:
         if self._resource_timer is not None:
             self._resource_timer.stop()
             self._resource_timer = None
         self._resource_monitor = None
+        if self._worker is not None:
+            # Bug fix: run() has already returned by the time finished_indexing/
+            # error fires (both are the last things it does before its finally
+            # block), but wait() here removes any race between the OS thread
+            # actually finishing and Python dropping the last reference to this
+            # QThread -- without it, Qt can destroy a QThread whose underlying
+            # thread hasn't fully unwound yet, which crashes the whole process.
+            self._worker.wait()
         self._worker = None
         self._current_pause_reason = None
         self._manual_pause_active = False

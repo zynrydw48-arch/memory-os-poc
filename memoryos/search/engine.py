@@ -4,10 +4,42 @@ from dataclasses import dataclass
 from memoryos.database.db import Database
 from memoryos.embeddings.provider import EmbeddingProvider
 from memoryos.index.store import IndexStore
-from memoryos.ranking.reasons import build_reasons
+from memoryos.ranking.attribute_boost import compute_attribute_boost
+from memoryos.ranking.reasons import build_reasons, tokenize
 from memoryos.ranking.similarity import rank_by_similarity
 
 DEFAULT_TOP_K = 10
+
+# Bug fix: pure cosine similarity over a flattened caption/tags/colors text
+# embedding can misrank on attribute-specific queries (e.g. "white dog"),
+# since the embedding doesn't reliably bind an adjective to the right noun.
+# Widening the candidate pool before applying memoryos.ranking.attribute_boost
+# lets an exact color/object keyword match pull a record back up even if raw
+# similarity alone put it just outside the naive top_k.
+_CANDIDATE_MULTIPLIER = 4
+_MIN_CANDIDATES = 40
+
+
+def _rerank_with_attribute_boost(
+    query: str,
+    records: list,
+    embeddings,
+    query_embedding,
+    top_k: int,
+) -> list[tuple[int, float]]:
+    query_tokens = tokenize(query)
+    candidate_k = min(len(records), max(top_k * _CANDIDATE_MULTIPLIER, _MIN_CANDIDATES))
+    candidates = rank_by_similarity(embeddings, query_embedding, candidate_k)
+
+    if not query_tokens:
+        return candidates[:top_k]
+
+    boosted = [
+        (idx, similarity, similarity + compute_attribute_boost(query_tokens, records[idx].metadata))
+        for idx, similarity in candidates
+    ]
+    boosted.sort(key=lambda entry: entry[2], reverse=True)
+    return [(idx, similarity) for idx, similarity, _ in boosted[:top_k]]
 
 
 @dataclass
@@ -33,7 +65,9 @@ class SearchEngine:
             return []
 
         query_embedding = self._embedding_provider.encode([query])[0]
-        ranked = rank_by_similarity(self._index_store.embeddings, query_embedding, top_k)
+        ranked = _rerank_with_attribute_boost(
+            query, self._index_store.records, self._index_store.embeddings, query_embedding, top_k
+        )
 
         hits = []
         for rank, (idx, similarity) in enumerate(ranked, start=1):
@@ -68,7 +102,7 @@ class DatabaseSearchEngine:
             return []
 
         query_embedding = self._embedding_provider.encode([query])[0]
-        ranked = rank_by_similarity(embeddings, query_embedding, top_k)
+        ranked = _rerank_with_attribute_boost(query, records, embeddings, query_embedding, top_k)
 
         hits = []
         for rank, (idx, similarity) in enumerate(ranked, start=1):
