@@ -1,5 +1,5 @@
 # MemoryOS
-
+[Download MemoryOS for Windows (EXE Installer)](https://drive.google.com/file/d/1yhwD5fnVljoQeeShd4OAYnkGsay01jrE/view?usp=drive_link)
 Semantic search over local files by natural-language description, not filename.
 
 v1.0.0 — the V1 desktop app is feature-complete: a redesigned UI, background
