@@ -1,10 +1,44 @@
 import sys
 
+import pytest
 from PySide6.QtWidgets import QApplication
 
-from memoryos.ui.search_results_filter_bar import SearchResultsFilterBar
+from memoryos.ui.search_results_filter_bar import SearchResultsFilterBar, categorize_extension
 
 _app = QApplication.instance() or QApplication(sys.argv)
+
+
+@pytest.mark.parametrize(
+    "extension,expected",
+    [
+        (".png", "Images"),
+        (".jpg", "Images"),
+        (".JPG", "Images"),  # case-insensitivity
+        (".webp", "Images"),
+        (".html", "Web"),
+        (".htm", "Web"),
+        (".url", "Web"),
+        (".pdf", "Files"),
+        (".docx", "Files"),
+        (".xlsx", "Files"),
+        (".pptx", "Files"),
+        (".zip", "Files"),
+        (".txt", "Files"),
+        (".csv", "Files"),
+        (".md", "Notes"),
+        (".markdown", "Notes"),
+        (".norg", "Notes"),
+        (".org", "Notes"),
+        (".exe", "More..."),
+        ("", "More..."),
+    ],
+)
+def test_categorize_extension(extension, expected):
+    assert categorize_extension(extension) == expected
+
+
+def test_categorize_extension_accepts_extension_without_leading_dot():
+    assert categorize_extension("PNG") == "Images"
 
 
 def test_all_tab_checked_by_default():

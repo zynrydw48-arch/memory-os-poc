@@ -499,7 +499,7 @@ class MainWindow(QMainWindow):
 
         hits = self._search_engine.search(query)
         self._last_hits = hits
-        self._results_view.set_results(hits, self._effective_theme())
+        self._results_view.set_results(hits, self._effective_theme(), query)
         # A rename/delete-triggered refresh can take the database from
         # non-empty to empty (deleting the last indexed file) -- keep
         # EmptyState/ResultsView in sync with that on every search path.

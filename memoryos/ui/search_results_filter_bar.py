@@ -8,6 +8,34 @@ from PySide6.QtWidgets import QButtonGroup, QHBoxLayout, QPushButton, QWidget
 
 TAB_LABELS = ["All", "Images", "Web", "Files", "Notes", "More..."]
 
+# Client-side categorization only -- purely a re-render over SearchHits
+# already fetched by the (untouched) search engine, not a statement about
+# what this app can index/extract. "Web"/"Notes" extensions aren't
+# currently indexable at all, so those tabs will legitimately show the
+# empty state for every corpus this app can actually build today.
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif", ".bmp"}
+WEB_EXTENSIONS = {".html", ".htm", ".url"}
+FILE_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".pptx", ".zip", ".txt", ".csv"}
+NOTE_EXTENSIONS = {".md", ".markdown", ".norg", ".org"}
+
+
+def categorize_extension(extension: str) -> str:
+    """Maps a file extension (with or without a leading dot) to one of
+    TAB_LABELS (excluding "All"), case-insensitively. Anything not in the
+    named buckets falls into "More..."."""
+    ext = extension.lower()
+    if not ext.startswith("."):
+        ext = f".{ext}"
+    if ext in IMAGE_EXTENSIONS:
+        return "Images"
+    if ext in WEB_EXTENSIONS:
+        return "Web"
+    if ext in FILE_EXTENSIONS:
+        return "Files"
+    if ext in NOTE_EXTENSIONS:
+        return "Notes"
+    return "More..."
+
 
 class SearchResultsFilterBar(QWidget):
     filter_selected = Signal(str)

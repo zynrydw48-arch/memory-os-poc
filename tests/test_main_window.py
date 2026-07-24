@@ -71,6 +71,56 @@ def window(tmp_path):
 
 
 @pytest.fixture
+def window_with_mixed_files(tmp_path):
+    """One Files-category file (.txt) and one Images-category file (.jpg) --
+    both match any query via FakeEmbeddingProvider's fixed encoding, so this
+    fixture is for filter-tab tests, not ranking/relevance ones."""
+    db_path = tmp_path / "mixed.sqlite3"
+    database = Database(db_path)
+
+    embedding = np.ones(EMBED_DIM, dtype=np.float32)
+    embedding /= np.linalg.norm(embedding)
+
+    note_path = tmp_path / "note.txt"
+    note_path.write_text("hello", encoding="utf-8")
+    database.upsert_file(
+        FileRecord(
+            id="id-note",
+            path=str(note_path),
+            filename="note.txt",
+            extension=".txt",
+            file_type="text",
+            semantic_text="a note",
+            metadata={},
+            mtime=1.0,
+            indexed_at=1.0,
+        ),
+        embedding,
+    )
+
+    photo_path = tmp_path / "photo.jpg"
+    photo_path.write_bytes(b"fake-jpg-bytes")
+    database.upsert_file(
+        FileRecord(
+            id="id-photo",
+            path=str(photo_path),
+            filename="photo.jpg",
+            extension=".jpg",
+            file_type="image",
+            semantic_text="a photo",
+            metadata={},
+            mtime=1.0,
+            indexed_at=1.0,
+        ),
+        embedding,
+    )
+
+    win = MainWindow(FakeEmbeddingProvider(), None, None, database, db_path)
+    yield win
+    database.close()
+
+
+@pytest.fixture
 def empty_window(tmp_path):
     db_path = tmp_path / "empty.sqlite3"
     database = Database(db_path)
@@ -107,6 +157,62 @@ def test_zero_result_search_hides_filter_bar(window):
     window._results_view.set_results([], window._effective_theme())
 
     assert not window._results_view._filter_bar.isVisibleTo(window._results_view)
+
+
+def test_filter_tab_shows_only_matching_category(window_with_mixed_files):
+    window = window_with_mixed_files
+    window._search_line_edit.setText("anything")
+    window._on_search()
+    assert len(window._results_view._cards) == 2  # both match, FakeEmbeddingProvider
+
+    window._results_view._filter_bar._buttons["Images"].click()
+
+    assert [c.filename_label.text() for c in window._results_view._cards] == ["photo.jpg"]
+    assert not window._results_view._filter_empty_state.isVisibleTo(window._results_view)
+    assert window._results_view._scroll_area.isVisibleTo(window._results_view)
+
+
+def test_filter_tab_with_no_matches_shows_empty_state_message(window_with_mixed_files):
+    window = window_with_mixed_files
+    window._search_line_edit.setText("white dog")
+    window._on_search()
+
+    window._results_view._filter_bar._buttons["Notes"].click()
+
+    assert window._results_view._cards == []
+    assert window._results_view._filter_empty_state.isVisibleTo(window._results_view)
+    assert not window._results_view._scroll_area.isVisibleTo(window._results_view)
+    assert (
+        window._results_view._filter_empty_state._message_label.text()
+        == "We couldn't find any notes matching 'white dog'"
+    )
+
+
+def test_switching_back_to_all_restores_every_card(window_with_mixed_files):
+    window = window_with_mixed_files
+    window._search_line_edit.setText("anything")
+    window._on_search()
+
+    window._results_view._filter_bar._buttons["Images"].click()
+    assert len(window._results_view._cards) == 1
+
+    window._results_view._filter_bar._buttons["All"].click()
+
+    assert len(window._results_view._cards) == 2
+
+
+def test_new_search_resets_an_active_filter_back_to_all(window_with_mixed_files):
+    window = window_with_mixed_files
+    window._search_line_edit.setText("anything")
+    window._on_search()
+    window._results_view._filter_bar._buttons["Images"].click()
+    assert len(window._results_view._cards) == 1
+
+    window._search_line_edit.setText("something else")
+    window._on_search()
+
+    assert window._results_view._active_filter == "All"
+    assert len(window._results_view._cards) == 2
 
 
 def test_history_entry_click_still_records_a_new_entry(window):
