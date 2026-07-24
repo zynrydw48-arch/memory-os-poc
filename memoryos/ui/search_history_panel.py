@@ -39,8 +39,8 @@ class SearchHistoryPanel(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(6)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(10)
 
         header_row = QHBoxLayout()
         self._header_icon_label = QLabel()

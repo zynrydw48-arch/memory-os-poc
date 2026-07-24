@@ -38,20 +38,25 @@ def resolve_effective_theme(
 
 
 def _dark_palette() -> QPalette:
+    # V2 Sprint 1: luxury slate/navy tokens, matching dark.qss's literals --
+    # keeps native dialogs (QMessageBox/QInputDialog/QFileDialog) visually
+    # consistent with the redesigned custom panels instead of showing the
+    # old flat gray. ToolTipBase previously stayed pure white in dark mode
+    # (a latent bug never actually noticed) -- now correctly dark too.
     palette = QPalette()
-    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
-    palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
-    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
-    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.Text, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
-    palette.setColor(QPalette.ColorRole.ButtonText, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.BrightText, QColor(255, 0, 0))
-    palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
-    palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+    palette.setColor(QPalette.ColorRole.Window, QColor(15, 23, 42))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor(241, 245, 249))
+    palette.setColor(QPalette.ColorRole.Base, QColor(10, 16, 28))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(51, 65, 85))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(30, 41, 59))
+    palette.setColor(QPalette.ColorRole.ToolTipText, QColor(241, 245, 249))
+    palette.setColor(QPalette.ColorRole.Text, QColor(241, 245, 249))
+    palette.setColor(QPalette.ColorRole.Button, QColor(30, 41, 59))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor(241, 245, 249))
+    palette.setColor(QPalette.ColorRole.BrightText, QColor(201, 119, 129))
+    palette.setColor(QPalette.ColorRole.Link, QColor(61, 90, 130))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(61, 90, 130))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
     return palette
 
 

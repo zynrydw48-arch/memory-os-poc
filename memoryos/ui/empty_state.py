@@ -24,7 +24,7 @@ class EmptyState(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setAlignment(QtCore_Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(12)
+        layout.setSpacing(20)
 
         self._icon_label = QLabel()
         self._icon_label.setAlignment(QtCore_Qt.AlignmentFlag.AlignCenter)

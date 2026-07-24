@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
 
         central = QWidget()
         layout = QVBoxLayout(central)
-        layout.setSpacing(12)
+        layout.setSpacing(18)
 
         self._toast_label = QLabel()
         self._toast_label.setObjectName("toastBanner")
@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
         index_layout = QVBoxLayout(index_panel)
         # Matches ResultCard/SearchHistoryPanel's explicit margins -- every
         # "sectionPanel"-styled container should have identical inner spacing.
-        index_layout.setContentsMargins(12, 10, 12, 10)
+        index_layout.setContentsMargins(18, 16, 18, 16)
 
         index_title_row = QHBoxLayout()
         self._index_title_icon = QLabel()
@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
         search_panel = QWidget()
         search_panel.setObjectName("sectionPanel")
         search_layout = QVBoxLayout(search_panel)
-        search_layout.setContentsMargins(12, 10, 12, 10)
+        search_layout.setContentsMargins(18, 16, 18, 16)
 
         search_title_row = QHBoxLayout()
         self._search_title_icon = QLabel()
@@ -239,6 +239,15 @@ class MainWindow(QMainWindow):
 
     def _effective_theme(self) -> Theme:
         return resolve_effective_theme(self._current_theme)
+
+    def _set_status_style(self, object_name: str) -> None:
+        """V2 Sprint 1: color-codes the status label by state (normal/
+        paused/error) using the new palette's warning/danger tokens --
+        setObjectName() alone doesn't retrigger QSS selector matching on an
+        already-shown widget, hence the unpolish/polish pair."""
+        self._status_label.setObjectName(object_name)
+        self._status_label.style().unpolish(self._status_label)
+        self._status_label.style().polish(self._status_label)
 
     def _refresh_results_visibility(self) -> None:
         has_indexed_files = len(self._database) > 0
@@ -322,6 +331,7 @@ class MainWindow(QMainWindow):
     def _on_start_indexing(self) -> None:
         if self._selected_folder is None:
             self._status_label.setText("Pick a folder first.")
+            self._set_status_style("mutedLabel")
             return
         if self._worker is not None:
             return
@@ -340,6 +350,7 @@ class MainWindow(QMainWindow):
         self._pause_resume_button.setText("Pause")
         self._cancel_button.setEnabled(True)
         self._status_label.setText(f"Indexing... 0/{total}")
+        self._set_status_style("mutedLabel")
 
         embedding_provider = self._embedding_provider
         ocr_engine = self._ocr_engine
@@ -384,6 +395,7 @@ class MainWindow(QMainWindow):
             self._worker.request_cancel()
             self._cancel_button.setEnabled(False)
             self._status_label.setText("Cancelling...")
+            self._set_status_style("mutedLabel")
 
     def _check_resources(self) -> None:
         if self._worker is None or self._manual_pause_active:
@@ -415,17 +427,20 @@ class MainWindow(QMainWindow):
         self._status_label.setText(
             f"{label} — {self._progress_bar.value()}/{self._progress_bar.maximum()}"
         )
+        self._set_status_style("statusLabelWarning")
 
     def _on_worker_resumed(self) -> None:
         self._current_pause_reason = None
         self._status_label.setText(
             f"Indexing... {self._progress_bar.value()}/{self._progress_bar.maximum()}"
         )
+        self._set_status_style("mutedLabel")
 
     def _on_worker_finished(self, stats: IndexStats) -> None:
         self._teardown_worker()
         self._progress_bar.setVisible(False)
         self._status_label.setText("Ready.")
+        self._set_status_style("mutedLabel")
         message = f"Indexing complete — {stats.indexed} file(s) indexed."
         if stats.errors:
             message += f" {len(stats.errors)} error(s)."
@@ -439,6 +454,7 @@ class MainWindow(QMainWindow):
         self._teardown_worker()
         self._progress_bar.setVisible(False)
         self._status_label.setText(f"Indexing failed: {message}")
+        self._set_status_style("statusLabelError")
 
     def _show_toast(self, message: str) -> None:
         self._toast_label.setText(message)
@@ -492,6 +508,7 @@ class MainWindow(QMainWindow):
         result_count_text = f"{len(hits)} results." if hits else "No results."
         if self._worker is None:
             self._status_label.setText(result_count_text)
+            self._set_status_style("mutedLabel")
 
         if record_history:
             self._database.record_search_history(query, len(hits))

@@ -4,7 +4,7 @@ Sprint 4 already implemented -- MainWindow connects these to its existing,
 unchanged handler methods; this widget knows nothing about Database or
 file_actions itself."""
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -48,12 +48,12 @@ class ResultCard(QWidget):
 
     def _build_ui(self, hit: SearchHit) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(4)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(8)
 
         header_row = QHBoxLayout()
         self.filename_label = QLabel(hit.filename)
-        self.filename_label.setStyleSheet("font-weight: 600; font-size: 13px;")
+        self.filename_label.setStyleSheet("font-weight: 600; font-size: 14px;")
         similarity_label = QLabel(f"{hit.similarity:.0%} match")
         similarity_label.setObjectName("mutedLabel")
         header_row.addWidget(self.filename_label, 1)
@@ -99,6 +99,7 @@ class ResultCard(QWidget):
         button.setObjectName("dangerIconButton" if danger else "iconButton")
         button.setToolTip(tooltip)
         button.setProperty("iconName", icon_name)
+        button.setIconSize(QSize(18, 18))
         button.clicked.connect(lambda: signal.emit(self._path))
         return button
 

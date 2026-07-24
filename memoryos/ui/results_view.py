@@ -32,7 +32,7 @@ class ResultsView(QWidget):
         self._container = QWidget()
         self._container_layout = QVBoxLayout(self._container)
         self._container_layout.setContentsMargins(0, 0, 0, 0)
-        self._container_layout.setSpacing(8)
+        self._container_layout.setSpacing(12)
         self._container_layout.addStretch(1)
 
         scroll_area = QScrollArea()
