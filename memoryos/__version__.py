@@ -5,4 +5,4 @@ Python constant, and a shared build-time mechanism isn't worth the added
 complexity for one two-place string at this project's scale. Keep both in
 sync by hand on every version bump."""
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"

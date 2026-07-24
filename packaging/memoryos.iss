@@ -8,7 +8,7 @@
 ; Sprint 9: keep in sync by hand with memoryos/__version__.py's __version__ --
 ; Inno's preprocessor can't import a Python constant, so these are two
 ; separately-hardcoded values, not a shared build-time source of truth.
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "MemoryOS"
 #define MyAppExeName "MemoryOS.exe"
 
