@@ -139,6 +139,34 @@ QWidget#emptyState {
     background-color: transparent;
 }
 
+/* V2: search results filter bar -- tokens reused exactly from sectionPanel/
+   resultCard (surface/border/radius), mutedLabel (default tab text),
+   QPushButton:hover (hover background), and the primary accent (checked
+   tab's underline) -- no new colors introduced. */
+QWidget#filterBar {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+}
+
+QPushButton#filterTab {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: #64748B;
+}
+
+QPushButton#filterTab:hover {
+    background-color: #EEF2F7;
+}
+
+QPushButton#filterTab:checked {
+    color: #0F172A;
+    border-bottom: 2px solid #2F4C74;
+}
+
 QProgressBar {
     border: none;
     border-radius: 6px;

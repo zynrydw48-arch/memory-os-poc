@@ -88,6 +88,27 @@ def test_normal_search_records_history(window):
     assert window._results_stack.currentWidget() is window._results_view
 
 
+def test_populated_search_shows_filter_bar(window):
+    window._search_line_edit.setText("a note")
+    window._on_search()
+
+    assert window._results_view._filter_bar.isVisibleTo(window._results_view)
+
+
+def test_zero_result_search_hides_filter_bar(window):
+    # The fake embedding provider always encodes to the same fixed vector,
+    # so it can't produce a genuine zero-similarity query here -- calling
+    # set_results([], ...) directly exercises the same hide-on-empty path
+    # ResultsView.set_results() takes for a real zero-result search.
+    window._search_line_edit.setText("a note")
+    window._on_search()
+    assert window._results_view._filter_bar.isVisibleTo(window._results_view)
+
+    window._results_view.set_results([], window._effective_theme())
+
+    assert not window._results_view._filter_bar.isVisibleTo(window._results_view)
+
+
 def test_history_entry_click_still_records_a_new_entry(window):
     window._search_line_edit.setText("a note")
     window._on_search()
